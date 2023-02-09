@@ -22,20 +22,23 @@ const database = getDatabase(appFirebase);
 // Initialize Express
 const app = express();
 
-// Create GET request
-app.get("/", (req, res) => {
-  //read data from database (https://firebase.google.com/docs/database/web/read-and-write#web-version-9)
-  onValue(
-    ref(database, "/user/"),
-    (snapshot) => {
-      res.send({ message: snapshot.val() });
-    },
-    {
-      onlyOnce: true,
-    }
-  );
-});
-
+try {
+  // Create GET request
+  app.get("/", (req, res) => {
+    //read data from database (https://firebase.google.com/docs/database/web/read-and-write#web-version-9)
+    onValue(
+      ref(database, "/user/"),
+      (snapshot) => {
+        res.send({ message: snapshot.val() });
+      },
+      {
+        onlyOnce: true,
+      }
+    );
+  });
+} catch (error) {
+  console.error(error);
+}
 // Initialize server
 app.listen(5000, () => {
   console.log("Running on port 5000.");
