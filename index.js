@@ -1,35 +1,18 @@
 import express from "express";
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, onValue } from "firebase/database";
-
 import { scanAvailableDevices } from "./scanDevices.js";
-
-// // Your web app's Firebase configuration
-// const firebaseConfig = {
-//   apiKey: "AIzaSyA2Squim3XPlaqIlbV4lNb-Nx6Qz5JjNNQ",
-//   authDomain: "attendance-record-app-7e8e5.firebaseapp.com",
-//   projectId: "attendance-record-app-7e8e5",
-//   storageBucket: "attendance-record-app-7e8e5.appspot.com",
-//   messagingSenderId: "235122994474",
-//   appId: "1:235122994474:web:2ab70ea249ca23ba9a8253",
-//   databaseURL:
-//     "https://attendance-record-app-7e8e5-default-rtdb.europe-west1.firebasedatabase.app",
-// };
-// // Initialize Firebase
-// const appFirebase = initializeApp(firebaseConfig);
-
-// //get Database
-// const database = getDatabase(appFirebase);
 
 // Initialize Express
 const app = express();
 
+const activeUsers = {
+  "F4:7D:EF:57:50:F3": { username: "ikozul00", isProfesor: false },
+  "E0:AA:96:BB:17:5F": { username: "sgotovac", isProfesor: true },
+};
+
 var intervalID;
 
-const addresses = ["F4:7D:EF:57:50:F3", "E0:AA:96:BB:17:60"];
 const startScanning = () => {
-  intervalID = setInterval(scanAvailableDevices, 10000);
-  console.log("end");
+  intervalID = setInterval(scanAvailableDevices, 10000, activeUsers);
 };
 
 // try {

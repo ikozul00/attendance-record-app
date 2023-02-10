@@ -1,11 +1,9 @@
 import bluetooth
 import sys
 
-addresses = ["F4:7D:EF:57:50:F3", "E0:AA:96:BB:17:5F"]
-for address in addresses:
-    print(address)
-    result = bluetooth.lookup_name(address, timeout=5)
+for i in range(1, len(sys.argv)):
+    result = bluetooth.lookup_name(sys.argv[i], timeout=5)
     if result != None:
-        print(f"{result} is present")
+        print(sys.argv[i])
     else:
-        print("Nije")
+        print("")
