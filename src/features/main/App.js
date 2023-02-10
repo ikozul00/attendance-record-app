@@ -11,8 +11,10 @@ import LoginScreen from './screens/login';
 
 const Stack = createNativeStackNavigator();
 
-export const App = () => {
 
+
+//starting point of application, start writing code here
+export const App = () => {
 
 
   return (
