@@ -1,21 +1,26 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Button, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Image, TextInput } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { StackView } from '@react-navigation/stack';
+import HomeScreen from './screens/home';
+import { useState, useEffect } from 'react'
+import NfcManager, { NfcTech } from 'react-native-nfc-manager';
+import LoginScreen from './screens/login';
 
-//starting point of application, start writing code here
+
+const Stack = createNativeStackNavigator();
+
 export const App = () => {
+
+
+
   return (
-    <SafeAreaView>
-      <View>
-        <Text>Attendance record</Text>
-      </View>
-    </SafeAreaView>
-  );
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName='Login'>
+        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }}></Stack.Screen>
+        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }}></Stack.Screen>
+      </Stack.Navigator>
+    </NavigationContainer>
+  )
 };
