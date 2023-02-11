@@ -2,7 +2,7 @@
   package="com.attendancerecord">
 
     <uses-permission android:name="android.permission.INTERNET" />
-     <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.NFC" />
 
     <application
       android:name=".MainApplication"

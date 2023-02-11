@@ -217,6 +217,12 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        // release {
+        //     storeFile file('attendence_record.keystore')
+        //     storePassword 'seminar12345'
+        //     keyAlias 'attendence_record.keystore'
+        //     keyPassword 'seminar12345'
+        // }
     }
     buildTypes {
         debug {
