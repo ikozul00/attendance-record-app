@@ -6,7 +6,7 @@ const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
 
-    const names = new Array("mbrigi00", "ikozul00", "mmucic00");
+    const names = new Array("mbrigi00", "ikozul00", "mmucic00", "sgotovac");
 
     const login = () => {
         if (names.includes(email) && password != "")

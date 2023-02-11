@@ -6,6 +6,9 @@ import { StackView } from '@react-navigation/stack';
 import NfcManager, { NfcTech } from 'react-native-nfc-manager';
 import DeviceInfo from 'react-native-device-info'
 import { getDeviceInfo } from 'react-native-device-info';
+import { db } from '../../../../firebase/initFirebase';
+import { onValue, ref } from "firebase/database";
+
 
 
 NfcManager.start();
@@ -13,16 +16,97 @@ NfcManager.start();
 export const HomeScreen = ({ route, navigation }) => {
 
     const [macAddress, setMacAddress] = useState("");
+    const [date, setDate] = useState("");
+    const [datumi, setDatumi] = useState([]);
+    const [datumiProfesor, setDatumiProfesor] = useState([]);
+    const [popis, setPopis] = useState([]);
+
 
 
     useEffect(() => {
-        const date = getCurrentDate();
-        DeviceInfo.getMacAddress().then((mac) => {
-            setMacAddress(mac);
-        })
-            ;
+
+
+        setDate(getCurrentDate())
+        getData();
+
+
     }, [])
 
+    const getData = () => {
+        if (route.params.paramKey == "sgotovac") {
+            const queryP = ref(db, `/root/Predmeti/Ugradbeni računalni sustavi/Profesor/Datumi`);
+            onValue(queryP, (snapshot) => {
+                const data = snapshot.val();
+                if (snapshot.exists()) {
+                    Object.keys(data).forEach((key) => {
+
+                        if (data[key] == 1) {
+                            setDatumiProfesor((datumiProfesor) => [...datumiProfesor, key]);
+                        }
+                    });
+
+                }
+
+            });
+            let ListOfData = [];
+            datumiProfesor.forEach(el => {
+                const query = ref(db, `/root/Predmeti/Ugradbeni računalni sustavi/Datumi/${el}`);
+                onValue(query, (snapshot) => {
+                    const data = snapshot.val();
+                    let array = [];
+                    if (snapshot.exists()) {
+
+                        Object.keys(data).forEach((key) => {
+
+                            if (data[key] == 1) {
+                                array.push(key);
+                            }
+                        });
+
+
+                    }
+
+                    ListOfData.push({ "datum": el, "popis": array })
+
+                    setPopis(ListOfData);
+
+                });
+            })
+        }
+        else {
+            const query = ref(db, `/root/Predmeti/Ugradbeni računalni sustavi/Studetni/${route.params.paramKey}/Datumi`);
+            onValue(query, (snapshot) => {
+                const data = snapshot.val();
+                if (snapshot.exists()) {
+                    Object.keys(data).forEach((key) => {
+
+                        if (data[key] == 1) {
+                            setDatumi((datumi) => [...datumi, key]);
+                        }
+                    });
+
+                }
+
+            });
+
+            const queryP = ref(db, `/root/Predmeti/Ugradbeni računalni sustavi/Profesor/Datumi`);
+            onValue(queryP, (snapshot) => {
+                const data = snapshot.val();
+                if (snapshot.exists()) {
+                    Object.keys(data).forEach((key) => {
+
+                        if (data[key] == 1) {
+                            setDatumiProfesor((datumiProfesor) => [...datumiProfesor, key]);
+                        }
+                    });
+
+                }
+
+            });
+
+        }
+
+    }
 
 
     const getCurrentDate = () => {
@@ -35,6 +119,12 @@ export const HomeScreen = ({ route, navigation }) => {
         return date + "" + month + "" + year;
     }
 
+    const changeDateFormat = (date) => {
+        let day = date.slice(0, 2);
+        let month = date.slice(2, 4);
+        let year = date.slice(4);
+        return day + "." + month + "." + year + "."
+    }
 
 
 
@@ -52,7 +142,6 @@ export const HomeScreen = ({ route, navigation }) => {
             NfcManager.cancelTechnologyRequest();
         }
     }
-
 
 
     return (
@@ -74,16 +163,12 @@ export const HomeScreen = ({ route, navigation }) => {
                     style={{ height: 52, width: 130, marginBottom: 10 }}
                     source={require('../../../../assets/fesb.png')}>
                 </Image>
-                <Text>{macAddress}</Text>
                 <View>
                     <Text style={{ color: "black" }}>{route.params.paramKey}</Text>
                     <TouchableOpacity>
                         <Text style={{ color: "black", fontWeight: "bold", fontSize: 15 }} onPress={() => navigation.replace("Login")}>Odjavi se</Text>
                     </TouchableOpacity>
                 </View>
-
-
-
 
             </View>
             <View style={{ backgroundColor: '#707070', paddingTop: 50, flex: 1 }} >
@@ -100,18 +185,27 @@ export const HomeScreen = ({ route, navigation }) => {
                         <Text style={{ color: "white", fontWeight: 'bold' }}>Datum</Text>
                         <Text style={{ color: "white", fontWeight: 'bold' }}>Prisutnost</Text>
                     </View>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 60 }}>
-                        <Text style={{ color: "white" }}>05.01.2023.</Text>
-                        <Text style={{ color: "white" }}>Prisutan</Text>
-                    </View>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 60 }}>
-                        <Text style={{ color: "white" }}>12.01.2023.</Text>
-                        <Text style={{ color: "white" }}>Nije prisutan</Text>
-                    </View>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 60 }}>
-                        <Text style={{ color: "white" }}>19.01.2023.</Text>
-                        <Text style={{ color: "white" }}>Prisutan</Text>
-                    </View>
+
+                    {route.params.paramKey != "sgotovac" && datumiProfesor.map((el) => (
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 60 }}>
+                            <Text style={{ color: "white" }}>{changeDateFormat(el)}</Text>
+                            <Text style={{ color: "white" }}>{datumi.includes(el) ? "Prisutan" : "Nije prisutan"}</Text>
+                        </View>
+                    ))}
+                    {route.params.paramKey == "sgotovac" && datumiProfesor.map((el) => (
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 60 }}>
+                            <Text style={{ color: "white" }}>{changeDateFormat(el)}</Text>
+                            {popis.map(x => (
+                                x.datum == el &&
+                                <View key={x.datum}>
+                                    <Text style={{ color: "white" }}>{x.popis.join(", ")}</Text>
+                                </View>
+                            )
+                            )}
+
+                            {console.log(popis)}
+                        </View>
+                    ))}
                 </View>
             </View >
 
