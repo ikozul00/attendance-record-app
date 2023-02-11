@@ -1,18 +1,47 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackView } from '@react-navigation/stack';
 import NfcManager, { NfcTech } from 'react-native-nfc-manager';
+import DeviceInfo from 'react-native-device-info'
+import { getDeviceInfo } from 'react-native-device-info';
+
 
 NfcManager.start();
 
 export const HomeScreen = ({ route, navigation }) => {
 
+    const [macAddress, setMacAddress] = useState("");
+
+
+    useEffect(() => {
+        const date = getCurrentDate();
+        DeviceInfo.getMacAddress().then((mac) => {
+            setMacAddress(mac);
+        })
+            ;
+    }, [])
+
+
+
+    const getCurrentDate = () => {
+        let date = new Date().getDate();
+        let month = new Date().getMonth() + 1;
+        if (month < 10)
+            month = 0 + "" + month;
+        let year = new Date().getFullYear();
+
+        return date + "" + month + "" + year;
+    }
+
+
+
+
     async function readNdef() {
         try {
             // register for the NFC tag with NDEF in it
-            await NfcManager.requestTechnology(NfcTech.Ndef);
+            await NfcManager.requestTechnology(NfcTech.NfcA);
             // the resolved tag object will contain `ndefMessage` property
             const tag = await NfcManager.getTag();
             console.warn('Tag found', Object.keys(tag));
@@ -45,12 +74,14 @@ export const HomeScreen = ({ route, navigation }) => {
                     style={{ height: 52, width: 130, marginBottom: 10 }}
                     source={require('../../../../assets/fesb.png')}>
                 </Image>
+                <Text>{macAddress}</Text>
                 <View>
                     <Text style={{ color: "black" }}>{route.params.paramKey}</Text>
                     <TouchableOpacity>
                         <Text style={{ color: "black", fontWeight: "bold", fontSize: 15 }} onPress={() => navigation.replace("Login")}>Odjavi se</Text>
                     </TouchableOpacity>
                 </View>
+
 
 
 
