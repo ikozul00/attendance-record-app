@@ -1,18 +1,10 @@
 import { spawn } from "child_process";
-import { ref, increment, update } from "firebase/database";
+import { ref, increment, update, set, get } from "firebase/database";
 import database from "./connectToDatabase.js";
-
-const getCurrentDate = () => {
-  const date = new Date();
-  const day = date.getDate();
-  let month = date.getMonth() + 1;
-  if (month < 10) month = 0 + "" + month;
-  const year = date.getFullYear();
-
-  return day + "" + month + "" + year;
-};
+import { getCurrentDate } from "./helper-functions.js";
 
 export const scanAvailableDevices = (activeUsers) => {
+  console.log(activeUsers);
   const addresses = Object.keys(activeUsers);
   const python = spawn("python", ["./bluetoothPing.py", ...addresses]);
   const activeAddresses = [];
@@ -22,30 +14,52 @@ export const scanAvailableDevices = (activeUsers) => {
   });
 
   python.on("close", (code) => {
+    const date = getCurrentDate();
     console.log(`child process close all stdio with code ${code}`);
-    addresses.map((address) => {
-      if (address) {
-        const user = activeUsers[address];
-        const date = getCurrentDate();
-        if (!user.isProfesor) {
-          update(
+    get(ref(database, `root/Ucionice/B401/${date}/`))
+      .then((snapshot) => {
+        if (!snapshot.exists()) {
+          set(
             ref(
               database,
-              `root/Ucionice/B401/${date}/Ugradbeni računalni sustavi/Studetni/` +
-                user.username
+              `root/Ucionice/B401/${date}/Ugradbeni računalni sustavi`
             ),
-            { value: increment(1) }
-          );
-        } else {
-          update(
-            ref(
-              database,
-              `root/Ucionice/B401/${date}/Ugradbeni računalni sustavi/Profesor/`
-            ),
-            { ime: "sgotovac", value: increment(1) }
+            {
+              Profesor: { ime: "sgotovac", value: 0 },
+              Studetni: {
+                ikozul00: { value: 0 },
+                mmucic00: { value: 0 },
+                mbrigi00: { value: 0 },
+              },
+            }
           );
         }
-      }
-    });
+        addresses.map((address) => {
+          if (address) {
+            const user = activeUsers[address];
+            if (!user.isProfesor) {
+              update(
+                ref(
+                  database,
+                  `root/Ucionice/${user.classroom}/${date}/Ugradbeni računalni sustavi/Studetni/` +
+                    user.username
+                ),
+                { value: increment(1) }
+              );
+            } else {
+              update(
+                ref(
+                  database,
+                  `root/Ucionice/B401/${date}/Ugradbeni računalni sustavi/Profesor/`
+                ),
+                { ime: "sgotovac", value: increment(1) }
+              );
+            }
+          }
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   });
 };
