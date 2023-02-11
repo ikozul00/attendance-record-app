@@ -20,7 +20,11 @@ var activeUsers = {};
 const startScanning = () => {
   console.log("start scanning");
   isScanningActive = true;
-  intervalID = setInterval(scanAvailableDevices, 10000, activeUsers);
+  intervalID = setInterval(triggerScan, 10000);
+};
+
+const triggerScan = () => {
+  scanAvailableDevices(activeUsers);
 };
 
 const findAddress = (username) => {
