@@ -17,11 +17,9 @@ export const HomeScreen = ({ route, navigation }) => {
   }, []);
 
   const getDataNew = () => {
-    console.log('pozvano');
     const profesorAttendenceDates = [];
     const queryP = ref(db, `/root/Predmeti/Ugradbeni računalni sustavi/Profesor/Datumi`);
     onValue(queryP, (snapshot) => {
-      console.log('get');
       if (profesorAttendenceDates.length !== 0) {
         profesorAttendenceDates = [];
       }
@@ -43,7 +41,6 @@ export const HomeScreen = ({ route, navigation }) => {
           profesorAttendenceDates.map((dateVal) => {
             let students = [];
             Object.keys(data[dateVal]).map((student) => {
-              console.log(data[dateVal][student]);
               if (data[dateVal][student] === 1) {
                 students.push(student);
               }
@@ -51,8 +48,6 @@ export const HomeScreen = ({ route, navigation }) => {
             values = { ...values, [dateVal]: students };
           });
         }
-        console.log(profesorAttendenceDates);
-        console.log(values);
         setPodaci({ datumi: profesorAttendenceDates, vrijednosti: values });
       });
     } else {
@@ -92,7 +87,6 @@ export const HomeScreen = ({ route, navigation }) => {
   async function readNdef() {
     try {
       setButtonColor('midnightblue');
-      console.log(buttonColor);
       const user = {};
       // register for the NFC tag with NDEF in it
       await NfcManager.requestTechnology(NfcTech.Ndef);
@@ -120,7 +114,6 @@ export const HomeScreen = ({ route, navigation }) => {
       // stop the nfc scanning
       NfcManager.cancelTechnologyRequest();
       setButtonColor('dodgerblue');
-      console.log(buttonColor);
     }
   }
 
@@ -171,9 +164,6 @@ export const HomeScreen = ({ route, navigation }) => {
             <Text style={{ color: 'white', fontSize: 24, alignSelf: 'center', fontWeight: 'bold' }}>
               Ugradbeni računalni sustavi
             </Text>
-            {/* <TouchableOpacity onPress={() => getDataNew()}>
-              <Text>Refresh</Text>
-            </TouchableOpacity> */}
           </View>
           <View
             style={{
@@ -193,6 +183,7 @@ export const HomeScreen = ({ route, navigation }) => {
           {route.params.paramKey != 'sgotovac' &&
             podaci.datumi.map((el) => (
               <View
+                key={el}
                 style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
@@ -209,6 +200,7 @@ export const HomeScreen = ({ route, navigation }) => {
           {route.params.paramKey == 'sgotovac' &&
             podaci.datumi.map((el) => (
               <View
+                key={el}
                 style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
@@ -221,7 +213,9 @@ export const HomeScreen = ({ route, navigation }) => {
                 <Text style={{ color: 'white' }}>{changeDateFormat(el)}</Text>
                 <View style={{ flexDirection: 'column' }}>
                   {podaci.vrijednosti[el].map((name) => (
-                    <Text style={{ color: 'white' }}>{name}</Text>
+                    <Text key={name} style={{ color: 'white' }}>
+                      {name}
+                    </Text>
                   ))}
                 </View>
               </View>
