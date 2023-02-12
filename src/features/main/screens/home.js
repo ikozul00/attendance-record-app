@@ -17,7 +17,7 @@ export const HomeScreen = ({ route, navigation }) => {
   }, []);
 
   const getDataNew = () => {
-    const profesorAttendenceDates = [];
+    var profesorAttendenceDates = [];
     const queryP = ref(db, `/root/Predmeti/Ugradbeni računalni sustavi/Profesor/Datumi`);
     onValue(queryP, (snapshot) => {
       if (profesorAttendenceDates.length !== 0) {
