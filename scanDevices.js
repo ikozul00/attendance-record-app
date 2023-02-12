@@ -15,6 +15,7 @@ export const scanAvailableDevices = (activeUsers) => {
 
   python.on("close", (code) => {
     const date = getCurrentDate();
+    console.log(date);
     console.log(`child process close all stdio with code ${code}`);
     get(ref(database, `root/Ucionice/B401/${date}/`))
       .then((snapshot) => {

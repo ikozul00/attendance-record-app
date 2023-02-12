@@ -3,7 +3,25 @@ import database from "./connectToDatabase.js";
 import { students } from "./const.js";
 import { getCurrentDate } from "./helper-functions.js";
 
+const updateProfesor = (date) => {
+  update(
+    ref(database, `root/Predmeti/Ugradbeni računalni sustavi/Profesor/Datumi/`),
+    { [date]: 1 }
+  );
+};
+
+const updateStudent = (student, date, value) => {
+  update(
+    ref(
+      database,
+      `root/Predmeti/Ugradbeni računalni sustavi/Studetni/${student}/Datumi`
+    ),
+    { [date]: value }
+  );
+};
+
 export const updateAttendance = (classroom) => {
+  console.log("update");
   const date = getCurrentDate();
   get(
     ref(
@@ -15,35 +33,17 @@ export const updateAttendance = (classroom) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         const profesorValue = data.Profesor.value;
-        update(
-          ref(
-            database,
-            `root/Predmeti/Ugradbeni računalni sustavi/Profesor/Datumi/`
-          ),
-          { [date]: 1 }
-        );
+        updateProfesor(date);
         console.log(profesorValue);
         var dates = {};
         students.map((student) => {
           if (data.Studetni[student]?.value / profesorValue > 0.85) {
             console.log(student);
             dates = { ...dates, [student]: 1 };
-            update(
-              ref(
-                database,
-                `root/Predmeti/Ugradbeni računalni sustavi/Studetni/${student}/Datumi`
-              ),
-              { [date]: 1 }
-            );
+            updateStudent(student, date, 1);
           } else {
             dates = { ...dates, [student]: 0 };
-            update(
-              ref(
-                database,
-                `root/Predmeti/Ugradbeni računalni sustavi/Studetni/${student}/Datumi`
-              ),
-              { [date]: 0 }
-            );
+            updateStudent(student, date, 0);
           }
         });
         update(
