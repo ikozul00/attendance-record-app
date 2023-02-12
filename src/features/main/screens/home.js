@@ -1,68 +1,59 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Button,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Image,
-} from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StackView } from '@react-navigation/stack';
+import { Text, TouchableOpacity, View, Image, ScrollView } from 'react-native';
 import NfcManager, { NfcTech, Ndef } from 'react-native-nfc-manager';
-import DeviceInfo from 'react-native-device-info';
-import { getDeviceInfo } from 'react-native-device-info';
 import { db } from '../../../../firebase/initFirebase';
-import { onValue, ref } from 'firebase/database';
+import { get, onValue, ref } from 'firebase/database';
 
 NfcManager.start();
 
 export const HomeScreen = ({ route, navigation }) => {
-  const [macAddress, setMacAddress] = useState('');
   const [date, setDate] = useState('');
-  const [datumi, setDatumi] = useState([]);
-  const [datumiProfesor, setDatumiProfesor] = useState([]);
-  const [popis, setPopis] = useState([]);
+  const [podaci, setPodaci] = useState({ datumi: [], vrijednosti: {} });
   const [buttonColor, setButtonColor] = useState('dodgerblue');
 
   useEffect(() => {
     setDate(getCurrentDate());
-    getData();
+    getDataNew();
   }, []);
 
-  const getData = () => {
+  const getDataNew = () => {
+    console.log('pozvano');
+    const profesorAttendenceDates = [];
+    const queryP = ref(db, `/root/Predmeti/Ugradbeni računalni sustavi/Profesor/Datumi`);
+    onValue(queryP, (snapshot) => {
+      console.log('get');
+      if (profesorAttendenceDates.length !== 0) {
+        profesorAttendenceDates = [];
+      }
+      const data = snapshot.val();
+      if (snapshot.exists()) {
+        Object.keys(data).forEach((key) => {
+          if (data[key] == 1) {
+            profesorAttendenceDates.push(key);
+          }
+        });
+      }
+    });
     if (route.params.paramKey == 'sgotovac') {
-      const queryP = ref(db, `/root/Predmeti/Ugradbeni računalni sustavi/Profesor/Datumi`);
-      onValue(queryP, (snapshot) => {
+      const query = ref(db, `/root/Predmeti/Ugradbeni računalni sustavi/Datumi/`);
+      onValue(query, (snapshot) => {
         const data = snapshot.val();
+        var values = {};
         if (snapshot.exists()) {
-          Object.keys(data).forEach((key) => {
-            if (data[key] == 1) {
-              setDatumiProfesor((datumiProfesor) => [...datumiProfesor, key]);
-            }
-          });
-        }
-      });
-      let ListOfData = [];
-      datumiProfesor.forEach((el) => {
-        const query = ref(db, `/root/Predmeti/Ugradbeni računalni sustavi/Datumi/${el}`);
-        onValue(query, (snapshot) => {
-          const data = snapshot.val();
-          let array = [];
-          if (snapshot.exists()) {
-            Object.keys(data).forEach((key) => {
-              if (data[key] == 1) {
-                array.push(key);
+          profesorAttendenceDates.map((dateVal) => {
+            let students = [];
+            Object.keys(data[dateVal]).map((student) => {
+              console.log(data[dateVal][student]);
+              if (data[dateVal][student] === 1) {
+                students.push(student);
               }
             });
-          }
-
-          ListOfData.push({ datum: el, popis: array });
-
-          setPopis(ListOfData);
-        });
+            values = { ...values, [dateVal]: students };
+          });
+        }
+        console.log(profesorAttendenceDates);
+        console.log(values);
+        setPodaci({ datumi: profesorAttendenceDates, vrijednosti: values });
       });
     } else {
       const query = ref(
@@ -71,25 +62,13 @@ export const HomeScreen = ({ route, navigation }) => {
       );
       onValue(query, (snapshot) => {
         const data = snapshot.val();
+        let values = {};
         if (snapshot.exists()) {
-          Object.keys(data).forEach((key) => {
-            if (data[key] == 1) {
-              setDatumi((datumi) => [...datumi, key]);
-            }
+          profesorAttendenceDates.map((dateVal) => {
+            values = { ...values, [dateVal]: data[dateVal] };
           });
         }
-      });
-
-      const queryP = ref(db, `/root/Predmeti/Ugradbeni računalni sustavi/Profesor/Datumi`);
-      onValue(queryP, (snapshot) => {
-        const data = snapshot.val();
-        if (snapshot.exists()) {
-          Object.keys(data).forEach((key) => {
-            if (data[key] == 1) {
-              setDatumiProfesor((datumiProfesor) => [...datumiProfesor, key]);
-            }
-          });
-        }
+        setPodaci({ datumi: profesorAttendenceDates, vrijednosti: values });
       });
     }
   };
@@ -113,6 +92,7 @@ export const HomeScreen = ({ route, navigation }) => {
   async function readNdef() {
     try {
       setButtonColor('midnightblue');
+      console.log(buttonColor);
       const user = {};
       // register for the NFC tag with NDEF in it
       await NfcManager.requestTechnology(NfcTech.Ndef);
@@ -140,32 +120,23 @@ export const HomeScreen = ({ route, navigation }) => {
       // stop the nfc scanning
       NfcManager.cancelTechnologyRequest();
       setButtonColor('dodgerblue');
+      console.log(buttonColor);
     }
   }
 
   return (
-    /*<NavigationContainer>
-          <Stack.Navigator initialRouteName='Home'>
-            <Stack.Screen name="Home" component={HomeScreen} />
-          </Stack.Navigator>
-        </NavigationContainer> */
-
-    /*<Image
-                    style={{ height: 40, width: 40, marginBottom: 10, alignSelf: "center" }}
-                    source={require('../../../../assets/hamburger.png')}>
-                </Image>*/
-
-    <View style={{ flex: 1, backgroundColor: '#C0C0C0' }}>
+    <ScrollView style={{ flex: 1, backgroundColor: '#707070' }}>
       <View
         style={{
-          marginTop: 10,
-          marginHorizontal: 10,
+          paddingHorizontal: 10,
           flexDirection: 'row',
           justifyContent: 'space-between',
+          backgroundColor: '#C0C0C0',
+          alignItems: 'center',
         }}
       >
         <Image
-          style={{ height: 52, width: 130, marginBottom: 10 }}
+          style={{ height: 52, width: 130, marginBottom: 10, marginTop: 10 }}
           source={require('../../../../assets/fesb.png')}
         ></Image>
         <View>
@@ -180,14 +151,14 @@ export const HomeScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-      <View style={{ backgroundColor: { buttonColor }, paddingTop: 50, flex: 1 }}>
+      <View style={{ backgroundColor: '#707070', paddingTop: 50, height: '100%' }}>
         <TouchableOpacity
           style={{
             borderRadius: 125,
             width: 250,
             height: 250,
             alignSelf: 'center',
-            backgroundColor: 'dodgerblue',
+            backgroundColor: buttonColor,
             justifyContent: 'center',
           }}
           onPress={readNdef}
@@ -197,105 +168,67 @@ export const HomeScreen = ({ route, navigation }) => {
 
         <View style={{ marginTop: 50 }}>
           <View>
-            <Text style={{ color: 'white', fontSize: 20, alignSelf: 'center', fontWeight: 'bold' }}>
+            <Text style={{ color: 'white', fontSize: 24, alignSelf: 'center', fontWeight: 'bold' }}>
               Ugradbeni računalni sustavi
             </Text>
+            {/* <TouchableOpacity onPress={() => getDataNew()}>
+              <Text>Refresh</Text>
+            </TouchableOpacity> */}
           </View>
           <View
-            style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 60 }}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              paddingHorizontal: 60,
+              borderBottomWidth: 1,
+              borderBottomColor: 'black',
+              marginTop: 15,
+              paddingBottom: 5,
+            }}
           >
-            <Text style={{ color: 'white', fontWeight: 'bold' }}>Datum</Text>
-            <Text style={{ color: 'white', fontWeight: 'bold' }}>Prisutnost</Text>
+            <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>Datum</Text>
+            <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>Prisutnost</Text>
           </View>
 
           {route.params.paramKey != 'sgotovac' &&
-            datumiProfesor.map((el) => (
+            podaci.datumi.map((el) => (
               <View
                 style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   paddingHorizontal: 60,
+                  paddingVertical: 8,
                 }}
               >
                 <Text style={{ color: 'white' }}>{changeDateFormat(el)}</Text>
                 <Text style={{ color: 'white' }}>
-                  {datumi.includes(el) ? 'Prisutan' : 'Nije prisutan'}
+                  {podaci.vrijednosti[el] === 1 ? 'Prisutan' : 'Nije prisutan'}
                 </Text>
               </View>
             ))}
           {route.params.paramKey == 'sgotovac' &&
-            datumiProfesor.map((el) => (
+            podaci.datumi.map((el) => (
               <View
                 style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   paddingHorizontal: 60,
+                  borderBottomWidth: 1,
+                  borderBottomColor: 'black',
+                  paddingVertical: 10,
                 }}
               >
                 <Text style={{ color: 'white' }}>{changeDateFormat(el)}</Text>
-                {popis.map(
-                  (x) =>
-                    x.datum == el && (
-                      <View key={x.datum}>
-                        <Text style={{ color: 'white' }}>{x.popis.join(', ')}</Text>
-                      </View>
-                    ),
-                )}
-
-                {console.log(popis)}
+                <View style={{ flexDirection: 'column' }}>
+                  {podaci.vrijednosti[el].map((name) => (
+                    <Text style={{ color: 'white' }}>{name}</Text>
+                  ))}
+                </View>
               </View>
             ))}
         </View>
       </View>
-    </View>
-    //   <View style={{ backgroundColor: '#707070', paddingTop: 50, flex: 1 }}>
-    //     <TouchableOpacity
-    //       style={{
-    //         borderRadius: 125,
-    //         width: 250,
-    //         height: 250,
-    //         alignSelf: 'center',
-    //         backgroundColor: buttonColor,
-    //         justifyContent: 'center',
-    //       }}
-    //       onPress={readNdef}
-    //     >
-    //       <Text style={{ fontSize: 50, color: 'white', alignSelf: 'center' }}>Skeniraj</Text>
-    //     </TouchableOpacity>
-
-    //     <View style={{ marginTop: 50 }}>
-    //       <View>
-    //         <Text style={{ color: 'white', fontSize: 20, alignSelf: 'center', fontWeight: 'bold' }}>
-    //           Ugradbeni računalni sustavi
-    //         </Text>
-    //       </View>
-    //       <View
-    //         style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 60 }}
-    //       >
-    //         <Text style={{ color: 'white', fontWeight: 'bold' }}>Datum</Text>
-    //         <Text style={{ color: 'white', fontWeight: 'bold' }}>Prisutnost</Text>
-    //       </View>
-    //       <View
-    //         style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 60 }}
-    //       >
-    //         <Text style={{ color: 'white' }}>05.01.2023.</Text>
-    //         <Text style={{ color: 'white' }}>Prisutan</Text>
-    //       </View>
-    //       <View
-    //         style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 60 }}
-    //       >
-    //         <Text style={{ color: 'white' }}>12.01.2023.</Text>
-    //         <Text style={{ color: 'white' }}>Nije prisutan</Text>
-    //       </View>
-    //       <View
-    //         style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 60 }}
-    //       >
-    //         <Text style={{ color: 'white' }}>19.01.2023.</Text>
-    //         <Text style={{ color: 'white' }}>Prisutan</Text>
-    //       </View>
-    //     </View>
-    //   </View>
-    // </View>
+    </ScrollView>
   );
 };
 
