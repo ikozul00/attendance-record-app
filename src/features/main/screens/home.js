@@ -10,11 +10,22 @@ export const HomeScreen = ({ route, navigation }) => {
   const [date, setDate] = useState('');
   const [podaci, setPodaci] = useState({ datumi: [], vrijednosti: {} });
   const [buttonColor, setButtonColor] = useState('dodgerblue');
+  const [studentAddresses, setStudentAddresses] = useState([]);
+  const [students, setStudents] = useState({});
 
   useEffect(() => {
     setDate(getCurrentDate());
     getDataNew();
+    getActiveStudents();
   }, []);
+
+  const getActiveStudents = async () => {
+    const data = await fetch('http://192.168.43.177:5000/students');
+    const jsonData = await data.json();
+    const studentsData = jsonData.students ? jsonData.students : {};
+    console.log(jsonData);
+    setStudents({ ...studentsData });
+  };
 
   const getDataNew = () => {
     var profesorAttendenceDates = [];
@@ -197,12 +208,11 @@ export const HomeScreen = ({ route, navigation }) => {
                 </Text>
               </View>
             ))}
-          {route.params.paramKey == 'sgotovac' &&
-            podaci.datumi.map((el) => (
+          {route.params.paramKey == 'sgotovac' && (
+            <>
               <View
-                key={el}
                 style={{
-                  flexDirection: 'row',
+                  flexDirection: 'column',
                   justifyContent: 'space-between',
                   paddingHorizontal: 60,
                   borderBottomWidth: 1,
@@ -210,16 +220,53 @@ export const HomeScreen = ({ route, navigation }) => {
                   paddingVertical: 10,
                 }}
               >
-                <Text style={{ color: 'white' }}>{changeDateFormat(el)}</Text>
-                <View style={{ flexDirection: 'column' }}>
-                  {podaci.vrijednosti[el].map((name) => (
-                    <Text key={name} style={{ color: 'white' }}>
-                      {name}
-                    </Text>
-                  ))}
+                <TouchableOpacity
+                  onPress={() => {
+                    getActiveStudents();
+                  }}
+                >
+                  <Text>Refresh</Text>
+                </TouchableOpacity>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Text style={{ color: 'white' }}>Danas</Text>
+                  <View>
+                    {Object.keys(students).map((address) => (
+                      <Text key={address} style={{ color: 'white' }}>
+                        {students[address].username}
+                      </Text>
+                    ))}
+                  </View>
                 </View>
               </View>
-            ))}
+              {podaci.datumi.map((el) => (
+                <View
+                  key={el}
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    paddingHorizontal: 60,
+                    borderBottomWidth: 1,
+                    borderBottomColor: 'black',
+                    paddingVertical: 10,
+                  }}
+                >
+                  <Text style={{ color: 'white' }}>{changeDateFormat(el)}</Text>
+                  <View style={{ flexDirection: 'column' }}>
+                    {podaci.vrijednosti[el].map((name) => (
+                      <Text key={name} style={{ color: 'white' }}>
+                        {name}
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </>
+          )}
         </View>
       </View>
     </ScrollView>
