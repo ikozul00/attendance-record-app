@@ -7,15 +7,15 @@ export const scanAvailableDevices = (activeUsers) => {
   console.log(activeUsers);
   const addresses = Object.keys(activeUsers);
   const python = spawn("python", ["./bluetoothPing.py", ...addresses]);
-  const activeAddresses = [];
+  var activeAddresses = [];
 
   python.stdout.on("data", async function (data) {
     activeAddresses.push(data.toString());
   });
 
   python.on("close", (code) => {
+    console.log(activeAddresses);
     const date = getCurrentDate();
-    console.log(date);
     console.log(`child process close all stdio with code ${code}`);
     get(ref(database, `root/Ucionice/B401/${date}/`))
       .then((snapshot) => {
@@ -35,10 +35,13 @@ export const scanAvailableDevices = (activeUsers) => {
             }
           );
         }
-        addresses.map((address) => {
+        activeAddresses = activeAddresses[0].split("\n");
+        activeAddresses.map((address) => {
+          address = address.split("\n")[0];
           if (address) {
             const user = activeUsers[address];
-            if (!user.isProfesor) {
+            console.log(user);
+            if (!user?.isProfesor) {
               update(
                 ref(
                   database,
@@ -58,6 +61,7 @@ export const scanAvailableDevices = (activeUsers) => {
             }
           }
         });
+        activeAddresses = [];
       })
       .catch((error) => {
         console.error(error);

@@ -35,15 +35,26 @@ const findAddress = (username) => {
     return "F4:7D:EF:57:50:F3";
   }
   if (username === "mmucic00") {
-    return "1C:E6:1D:5C:03:BC";
+    return "70:CE:8C:F5:6F:06";
   }
   if (username === "mbrigi00") {
-    return "";
+    return "CC:21:19:E8:8F:9C";
   }
 };
 
 app.get("/", (req, res) => {
   console.log("Hello");
+});
+
+app.get("/students", (req, res) => {
+  var students = {};
+  Object.keys(activeUsers).map((address) => {
+    const user = activeUsers[address];
+    if (user.username !== "sgotovac") {
+      students = { ...students, [address]: user };
+    }
+  });
+  res.json({ students: students });
 });
 
 app.post("/scanning", (req, res) => {
@@ -53,6 +64,7 @@ app.post("/scanning", (req, res) => {
       //finish class
       clearInterval(intervalID);
       isScanningActive = false;
+      activeUsers = {};
       updateAttendance(req.body.classroom);
     } else {
       activeUsers = { ...activeUsers, [address]: req.body };
